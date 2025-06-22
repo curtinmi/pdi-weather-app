@@ -40,13 +40,24 @@ def extract_weather_data(api_data: dict) -> dict:
     weather['sunset'] = api_data['sys']['sunset']
     return weather
 
+def output_weather_stdout(parsed_weather_data: dict, city: str) -> None:
+    """
+    Accepts a dictionary of parsed weather data and a string representing the location.
+    The weather data for the desired location is printed to the terminal.
+    """
+    print(f"\n\n{city}'s weather is: ")
+    for item in parsed_weather_data.items():
+        print(f"{item[0]}: {item[1]}")
+
 
 
 def main():
     load_dotenv()
-    print("Hello from pdi-weather-app!")
     city = prompt_user_for_city()
     api_call = call_open_weather_api_city(city)
+    weather_data = extract_weather_data(api_call)
+    output_weather_stdout(weather_data, city)
+
 
 if __name__ == "__main__":
     main()
