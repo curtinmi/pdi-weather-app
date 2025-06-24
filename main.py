@@ -1,6 +1,7 @@
 import requests
 import os
 
+from typing import NamedTuple
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,30 +21,50 @@ def call_open_weather_api_city(city: str) -> dict:
     api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
     return api_response.json()
 
-def extract_weather_data(api_data: dict) -> dict:
+class WeatherData(NamedTuple):
+    description: str
+    high_temp: float
+    low_temp: float
+    current_temp: float
+    feels_like: float
+    humidity: int
+    visibility: int
+    wind: float
+    sunrise: int
+    sunset: int
+
+def extract_weather_data(api_data: dict) -> WeatherData:
     """
     Extracts relevant values from the supplied dictionary and stores the key/value pair in a new dict.
     """
-    weather = {}
-    weather['description'] = api_data['weather'][0]['description']
-    weather['high_temp'] = api_data['main']['temp_max']
-    weather['low_temp'] = api_data['main']['temp_min']
-    weather['current_temp'] = api_data['main']['temp']
-    weather['feels_like'] = api_data['main']['feels_like']
-    weather['humidity'] = api_data['main']['humidity']
-    weather['visibility'] = api_data['visibility']
-    weather['avg_wind'] = api_data['wind']['speed']
-    weather['sunrise'] = api_data['sys']['sunrise']
-    weather['sunset'] = api_data['sys']['sunset']
-    return weather
+    return WeatherData(
+        description = api_data['weather'][0]['description'],
+        high_temp = api_data['main']['temp_max'],
+        low_temp = api_data['main']['temp_min'],
+        current_temp = api_data['main']['temp'],
+        feels_like = api_data['main']['feels_like'],
+        humidity = api_data['main']['humidity'],
+        visibility = api_data['visibility'],
+        wind = api_data['wind']['speed'],
+        sunrise = api_data['sys']['sunrise'],
+        sunset = api_data['sys']['sunset']
+    )
 
-def output_weather_stdout(parsed_weather_data: dict, city: str) -> None:
+def output_weather_stdout(data: WeatherData, city: str) -> None:
     """
     The weather data for the desired location is printed to the terminal.
     """
     print(f"\n\n{city}'s weather is: ")
-    for item in parsed_weather_data.items():
-        print(f"{item[0]}: {item[1]}")
+    print(f"description: {data.description}")
+    print(f"high temperature: {data.high_temp}")
+    print(f"low temperature: {data.description}")
+    print(f"current_temp: {data.current_temp}")
+    print(f"feels_like: {data.feels_like}")
+    print(f"humidity: {data.humidity}")
+    print(f"visibility: {data.visibility}")
+    print(f"wind: {data.wind}")
+    print(f"sunrise: {data.sunrise}")
+    print(f"sunset: {data.sunset}")
 
 
 
