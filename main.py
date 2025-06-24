@@ -3,6 +3,9 @@ import os
 
 from dotenv import load_dotenv
 
+load_dotenv()
+OPEN_WEATHER_KEY = os.environ['API_KEY']
+
 def prompt_user_for_city() -> str:
     """
     Prompts the user to enter a city name.
@@ -14,7 +17,6 @@ def call_open_weather_api_city(city: str) -> dict:
     """
     Calls the OpenWeather api and obtains weather data pertaining to that city.
     """
-    OPEN_WEATHER_KEY = os.environ['API_KEY']
     api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
     return api_response.json()
 
@@ -46,7 +48,6 @@ def output_weather_stdout(parsed_weather_data: dict, city: str) -> None:
 
 
 def main():
-    load_dotenv()
     city = prompt_user_for_city()
     api_call = call_open_weather_api_city(city)
     weather_data = extract_weather_data(api_call)
