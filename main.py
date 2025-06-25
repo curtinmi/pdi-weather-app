@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 OPEN_WEATHER_KEY = os.environ['API_KEY']
+TEMP_UNIT = 0
 
 def prompt_user_for_city() -> str:
     """
@@ -14,11 +15,25 @@ def prompt_user_for_city() -> str:
     response = str(input("Enter a city: "))
     return response.title().strip()
 
+def placeholder_unit_prompt() -> None:
+    """
+    Temporary user prompt to for determining the temperature units that will be displayed.
+    This will eventually be replaced by a command-line flag.
+    """
+    global TEMP_UNIT
+    TEMP_UNIT = int(input("Enter a 1 for Farhenheit, a 2 for Celsius, and enter a 0 for Kelvin: "))
+
+
 def call_open_weather_api_city(city: str) -> dict:
     """
     Calls the OpenWeather api and obtains weather data pertaining to that city.
     """
-    api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
+    if TEMP_UNIT == 0:
+        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
+    elif TEMP_UNIT == 1:
+        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units=imperial&appid={OPEN_WEATHER_KEY}')
+    else:
+        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={OPEN_WEATHER_KEY}')
     return api_response.json()
 
 class WeatherData(NamedTuple):
@@ -70,6 +85,7 @@ def output_weather_stdout(data: WeatherData, city: str) -> None:
 
 def main():
     city = prompt_user_for_city()
+    temp_unit = placeholder_unit_prompt()
     api_call = call_open_weather_api_city(city)
     weather_data = extract_weather_data(api_call)
     output_weather_stdout(weather_data, city)
