@@ -2,39 +2,40 @@ import requests
 import os
 import datetime
 
+from argparse import ArgumentParser
 from typing import NamedTuple
 from dotenv import load_dotenv
 
 load_dotenv()
 OPEN_WEATHER_KEY = os.environ['API_KEY']
-TEMP_UNIT = 0
 
-def prompt_user_for_city() -> str:
+def parse_cli():
     """
-    Prompts the user to enter a city name.
+    Extracts the command line arguments to determine the parameters passed to the api.
     """
-    response = str(input("Enter a city: "))
-    return response.title().strip()
+    parser = ArgumentParser()
+    parser.add_argument('city', help='provides weather into for a specified city', type=str)
+    parser.add_argument('-f', '--fahrenheit', help='displays temperature in fahrenheit', action='store_true')
+    parser.add_argument('-c', '--celsius', help='displays temperature in celsius', action='store_true')
+    return parser.parse_args()
 
-def placeholder_unit_prompt() -> None:
-    """
-    Temporary user prompt to for determining the temperature units that will be displayed.
-    This will eventually be replaced by a command-line flag.
-    """
-    global TEMP_UNIT
-    TEMP_UNIT = int(input("Enter a 1 for Farhenheit, a 2 for Celsius, and enter a 0 for Kelvin: "))
-
-
-def call_open_weather_api_city(city: str) -> dict:
+def call_open_weather_api_city(cli_args) -> dict:
     """
     Calls the OpenWeather api and obtains weather data pertaining to that city.
     """
-    if TEMP_UNIT == 0:
-        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
-    elif TEMP_UNIT == 1:
-        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units=imperial&appid={OPEN_WEATHER_KEY}')
+    city = cli_args.city
+
+    if cli_args.fahrenheit:
+        unit = 'imperial'
+
+    if cli_args.celsius:
+        unit = 'metric'
+
+    if cli_args.fahrenheit or cli_args.celsius:
+        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units={unit}&appid={OPEN_WEATHER_KEY}')
     else:
-        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={OPEN_WEATHER_KEY}')
+        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
+
     return api_response.json()
 
 class WeatherData(NamedTuple):
@@ -48,7 +49,6 @@ class WeatherData(NamedTuple):
     wind: float
     sunrise: int
     sunset: int
-    timezone_offset: int
 
 def extract_weather_data(api_data: dict) -> WeatherData:
     """
@@ -65,7 +65,6 @@ def extract_weather_data(api_data: dict) -> WeatherData:
         wind = api_data['wind']['speed'],
         sunrise = api_data['sys']['sunrise'],
         sunset = api_data['sys']['sunset'],
-        timezone_offset = api_data['timezone']
     )
 
 def unix_time_to_local(unix_time: int) -> datetime:
@@ -95,10 +94,9 @@ def output_weather_stdout(data: WeatherData, city: str) -> None:
 
 
 def main():
-    city = prompt_user_for_city()
-    temp_unit = placeholder_unit_prompt()
-    api_call = call_open_weather_api_city(city)
-    print(api_call)
+    args = parse_cli()
+    city = args.city    #this is redundant...will revisit this
+    api_call = call_open_weather_api_city(args)
     weather_data = extract_weather_data(api_call)
     output_weather_stdout(weather_data, city)
 
