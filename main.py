@@ -15,8 +15,11 @@ def parse_cli():
     """
     parser = ArgumentParser()
     parser.add_argument('city', help='provides weather into for a specified city', type=str)
-    parser.add_argument('-f', '--fahrenheit', help='displays temperature in fahrenheit', action='store_true')
-    parser.add_argument('-c', '--celsius', help='displays temperature in celsius', action='store_true')
+
+    units = parser.add_argument_group('unit flags', 'determines what unit of measure to apply')
+    temperature_unit = units.add_mutually_exclusive_group(required=True)
+    temperature_unit.add_argument('-f', '--fahrenheit', help='displays temperature in fahrenheit', action='store_true')
+    temperature_unit.add_argument('-c', '--celsius', help='displays temperature in celsius', action='store_true')
     return parser.parse_args()
 
 def call_open_weather_api_city(cli_args) -> dict:
