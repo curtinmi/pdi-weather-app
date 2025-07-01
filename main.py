@@ -50,6 +50,7 @@ class WeatherData(NamedTuple):
     humidity: int
     visibility: int
     wind: float
+    wind_direction: int
     sunrise: int
     sunset: int
 
@@ -66,6 +67,7 @@ def extract_weather_data(api_data: dict) -> WeatherData:
         humidity = api_data['main']['humidity'],
         visibility = api_data['visibility'],
         wind = api_data['wind']['speed'],
+        wind_direction = api_data['wind']['deg'],
         sunrise = api_data['sys']['sunrise'],
         sunset = api_data['sys']['sunset'],
     )
@@ -76,6 +78,27 @@ def unix_time_to_local(unix_time: int) -> datetime:
     """
     dt_obj = datetime.datetime.fromtimestamp(unix_time)
     return dt_obj.time()
+
+def convert_wind_direction(degree: int) -> str:
+    """
+    Converts wind direction from degrees to N, NE, S, SW, etc.
+    """
+    if 22 < degree < 68:
+        return 'NE'
+    elif 67 < degree < 113:
+        return 'E'
+    elif 112 < degree < 158:
+        return 'SE'
+    elif 157 < degree < 203:
+        return 'S'
+    elif 204 < degree < 248:
+        return 'SW'
+    elif 247 < degree < 293:
+        return 'W'
+    elif 292 < degree < 338:
+        return 'NW'
+    else:
+        return 'N'
 
 
 def output_weather_stdout(data: WeatherData, city: str) -> None:
@@ -90,7 +113,7 @@ def output_weather_stdout(data: WeatherData, city: str) -> None:
     print(f"feels_like: {data.feels_like}")
     print(f"humidity: {data.humidity}")
     print(f"visibility: {data.visibility}")
-    print(f"wind: {data.wind}")
+    print(f"wind: {data.wind} {convert_wind_direction(data.wind_direction)}")
     print(f"sunrise: {unix_time_to_local(data.sunrise)}")
     print(f"sunset: {unix_time_to_local(data.sunset)}")
 
@@ -98,10 +121,9 @@ def output_weather_stdout(data: WeatherData, city: str) -> None:
 
 def main():
     args = parse_cli()
-    city = args.city    #this is redundant...will revisit this
     api_call = call_open_weather_api_city(args)
     weather_data = extract_weather_data(api_call)
-    output_weather_stdout(weather_data, city)
+    output_weather_stdout(weather_data, args.city)
 
 
 if __name__ == "__main__":
