@@ -1,26 +1,39 @@
-import requests
-import os
 import datetime
-
+import os
 from argparse import ArgumentParser
 from typing import NamedTuple
+
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
-OPEN_WEATHER_KEY = os.environ['API_KEY']
+OPEN_WEATHER_KEY = os.environ["API_KEY"]
+
 
 def parse_cli():
     """
     Extracts the command line arguments to determine the parameters passed to the api.
     """
     parser = ArgumentParser()
-    parser.add_argument('city', help='provides weather into for a specified city', type=str)
+    parser.add_argument(
+        "city", help="provides weather into for a specified city", type=str
+    )
 
-    units = parser.add_argument_group('unit flags', 'determines what unit of measure to apply')
+    units = parser.add_argument_group(
+        "unit flags", "determines what unit of measure to apply"
+    )
     temperature_unit = units.add_mutually_exclusive_group(required=True)
-    temperature_unit.add_argument('-f', '--fahrenheit', help='displays temperature in fahrenheit', action='store_true')
-    temperature_unit.add_argument('-c', '--celsius', help='displays temperature in celsius', action='store_true')
+    temperature_unit.add_argument(
+        "-f",
+        "--fahrenheit",
+        help="displays temperature in fahrenheit",
+        action="store_true",
+    )
+    temperature_unit.add_argument(
+        "-c", "--celsius", help="displays temperature in celsius", action="store_true"
+    )
     return parser.parse_args()
+
 
 def call_open_weather_api_city(cli_args) -> dict:
     """
@@ -29,17 +42,22 @@ def call_open_weather_api_city(cli_args) -> dict:
     city = cli_args.city
 
     if cli_args.fahrenheit:
-        unit = 'imperial'
+        unit = "imperial"
 
     if cli_args.celsius:
-        unit = 'metric'
+        unit = "metric"
 
     if cli_args.fahrenheit or cli_args.celsius:
-        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&units={unit}&appid={OPEN_WEATHER_KEY}')
+        api_response = requests.get(
+            f"https://api.openweathermap.org/data/2.5/weather?q={city}&units={unit}&appid={OPEN_WEATHER_KEY}"
+        )
     else:
-        api_response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}')
+        api_response = requests.get(
+            f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPEN_WEATHER_KEY}"
+        )
 
     return api_response.json()
+
 
 class WeatherData(NamedTuple):
     description: str
@@ -54,23 +72,25 @@ class WeatherData(NamedTuple):
     sunrise: int
     sunset: int
 
+
 def extract_weather_data(api_data: dict) -> WeatherData:
     """
     Extracts relevant values from the supplied dictionary and stores the key/value pair in a new dict.
     """
     return WeatherData(
-        description = api_data['weather'][0]['description'],
-        high_temp = api_data['main']['temp_max'],
-        low_temp = api_data['main']['temp_min'],
-        current_temp = api_data['main']['temp'],
-        feels_like = api_data['main']['feels_like'],
-        humidity = api_data['main']['humidity'],
-        visibility = api_data['visibility'],
-        wind = api_data['wind']['speed'],
-        wind_direction = api_data['wind']['deg'],
-        sunrise = api_data['sys']['sunrise'],
-        sunset = api_data['sys']['sunset'],
+        description=api_data["weather"][0]["description"],
+        high_temp=api_data["main"]["temp_max"],
+        low_temp=api_data["main"]["temp_min"],
+        current_temp=api_data["main"]["temp"],
+        feels_like=api_data["main"]["feels_like"],
+        humidity=api_data["main"]["humidity"],
+        visibility=api_data["visibility"],
+        wind=api_data["wind"]["speed"],
+        wind_direction=api_data["wind"]["deg"],
+        sunrise=api_data["sys"]["sunrise"],
+        sunset=api_data["sys"]["sunset"],
     )
+
 
 def unix_time_to_local(unix_time: int) -> datetime:
     """
@@ -79,26 +99,27 @@ def unix_time_to_local(unix_time: int) -> datetime:
     dt_obj = datetime.datetime.fromtimestamp(unix_time)
     return dt_obj.time()
 
+
 def convert_wind_direction(degree: int) -> str:
     """
     Converts wind direction from degrees to N, NE, S, SW, etc.
     """
     if 22 < degree < 68:
-        return 'NE'
+        return "NE"
     elif 67 < degree < 113:
-        return 'E'
+        return "E"
     elif 112 < degree < 158:
-        return 'SE'
+        return "SE"
     elif 157 < degree < 203:
-        return 'S'
+        return "S"
     elif 204 < degree < 248:
-        return 'SW'
+        return "SW"
     elif 247 < degree < 293:
-        return 'W'
+        return "W"
     elif 292 < degree < 338:
-        return 'NW'
+        return "NW"
     else:
-        return 'N'
+        return "N"
 
 
 def output_weather_stdout(data: WeatherData, city: str) -> None:
@@ -116,7 +137,6 @@ def output_weather_stdout(data: WeatherData, city: str) -> None:
     print(f"wind: {data.wind} {convert_wind_direction(data.wind_direction)}")
     print(f"sunrise: {unix_time_to_local(data.sunrise)}")
     print(f"sunset: {unix_time_to_local(data.sunset)}")
-
 
 
 def main():
