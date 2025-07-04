@@ -104,19 +104,21 @@ def convert_wind_direction(degree: int) -> str:
     """
     Converts wind direction from degrees to N, NE, S, SW, etc.
     """
-    if 22 < degree < 68:
+    degree = degree % 360  # normalize to account for negative values
+
+    if 23 <= degree <= 67:
         return "NE"
-    elif 67 < degree < 113:
+    elif 68 <= degree <= 112:
         return "E"
-    elif 112 < degree < 158:
+    elif 113 <= degree <= 157:
         return "SE"
-    elif 157 < degree < 203:
+    elif 158 <= degree <= 202:
         return "S"
-    elif 204 < degree < 248:
+    elif 203 <= degree <= 247:
         return "SW"
-    elif 247 < degree < 293:
+    elif 248 <= degree <= 292:
         return "W"
-    elif 292 < degree < 338:
+    elif 293 <= degree <= 337:
         return "NW"
     else:
         return "N"
