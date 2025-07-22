@@ -16,6 +16,9 @@ def parse_cli():
     """
     parser = ArgumentParser()
     parser.add_argument("location", help="provides locational weather info", type=str)
+    parser.add_argument("--state", help="includes state code", type=str, default="")
+    parser.add_argument("--cc", help="includes country code", type=str, default="US")
+
     loc = parser.add_argument_group("locations", "site opts: city, zip")
     site = loc.add_mutually_exclusive_group(required=True)
     site.add_argument(
@@ -56,6 +59,9 @@ def call_open_weather_api_city(cli_args) -> dict:
     Calls the OpenWeather api and obtains weather data pertaining to that city.
     """
 
+    state = cli_args.state
+    country = cli_args.cc
+
     if cli_args.fahrenheit:
         unit = "imperial"
 
@@ -67,7 +73,7 @@ def call_open_weather_api_city(cli_args) -> dict:
     else:
         city = cli_args.location
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units={unit}&appid={OPEN_WEATHER_KEY}"
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city},{state},{country}&units={unit}&appid={OPEN_WEATHER_KEY}"
     api_response = requests.get(url)
 
     return api_response.json()
