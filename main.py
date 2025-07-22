@@ -15,18 +15,14 @@ def parse_cli():
     Extracts command line arguments to determine parameters passed to the api.
     """
     parser = ArgumentParser()
-    parser.add_argument("location", help="provides locational weather info", type=str)
-    parser.add_argument("--state", help="includes state code", type=str, default="")
-    parser.add_argument("--cc", help="includes country code", type=str, default="US")
 
     loc = parser.add_argument_group("locations", "site opts: city, zip")
     site = loc.add_mutually_exclusive_group(required=True)
-    site.add_argument(
-        "--city", help="interprets location as a city", action="store_true"
-    )
-    site.add_argument(
-        "--zip", help="interprets location as a zip code", action="store_true"
-    )
+    site.add_argument("--city", help="interprets location as a city", type=str)
+    site.add_argument("--zip", help="interprets location as a zip code", type=str)
+
+    parser.add_argument("--state", help="includes state code", type=str, default="")
+    parser.add_argument("--cc", help="includes country code", type=str, default="US")
 
     units = parser.add_argument_group(
         "unit flags", "determines what unit of measure to apply"
@@ -69,9 +65,9 @@ def call_open_weather_api_city(cli_args) -> dict:
         unit = "metric"
 
     if cli_args.zip:
-        city = get_city_from_zip(cli_args.location)
+        city = get_city_from_zip(cli_args.zip)
     else:
-        city = cli_args.location
+        city = cli_args.city
 
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city},{state},{country}&units={unit}&appid={OPEN_WEATHER_KEY}"
     api_response = requests.get(url)
@@ -165,7 +161,7 @@ def main():
     args = parse_cli()
     api_call = call_open_weather_api_city(args)
     weather_data = extract_weather_data(api_call)
-    output_weather_stdout(weather_data, args.location)
+    output_weather_stdout(weather_data, args.city)
 
 
 if __name__ == "__main__":
