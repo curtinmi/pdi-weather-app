@@ -37,6 +37,15 @@ def parse_cli():
     temperature_unit.add_argument(
         "-c", "--celsius", help="displays temperature in celsius", action="store_true"
     )
+
+    # if country is not US, then state should be null
+    if parser.parse_args().state and parser.parse_args().cc != "US":
+        print(
+            "A state code cannot exist for cities outside of the "
+            "United States. The state code has been dropped."
+        )
+        parser.parse_args().state = ""
+
     return parser.parse_args()
 
 
