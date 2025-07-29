@@ -15,15 +15,14 @@ def parse_cli():
     Extracts command line arguments to determine parameters passed to the api.
     """
     parser = ArgumentParser()
-    parser.add_argument("location", help="provides locational weather info", type=str)
+
     loc = parser.add_argument_group("locations", "site opts: city, zip")
     site = loc.add_mutually_exclusive_group(required=True)
-    site.add_argument(
-        "--city", help="interprets location as a city", action="store_true"
-    )
-    site.add_argument(
-        "--zip", help="interprets location as a zip code", action="store_true"
-    )
+    site.add_argument("--city", help="interprets location as a city", type=str)
+    site.add_argument("--zip", help="interprets location as a zip code", type=str)
+
+    parser.add_argument("--state", help="includes state code", type=str, default="")
+    parser.add_argument("--cc", help="includes country code", type=str, default="US")
 
     units = parser.add_argument_group(
         "unit flags", "determines what unit of measure to apply"
@@ -38,6 +37,16 @@ def parse_cli():
     temperature_unit.add_argument(
         "-c", "--celsius", help="displays temperature in celsius", action="store_true"
     )
+
+    # if country is not US, then state should be null
+    args = parser.parse_args()
+    if args.state and args.cc != "US":
+        print(
+            "A state code cannot exist for cities outside of the "
+            "United States. The state code has been dropped."
+        )
+        parser.parse_args().state = ""
+
     return parser.parse_args()
 
 
@@ -56,6 +65,9 @@ def call_open_weather_api_city(cli_args) -> dict:
     Calls the OpenWeather api and obtains weather data pertaining to that city.
     """
 
+    state = cli_args.state
+    country = cli_args.cc
+
     if cli_args.fahrenheit:
         unit = "imperial"
 
@@ -63,11 +75,11 @@ def call_open_weather_api_city(cli_args) -> dict:
         unit = "metric"
 
     if cli_args.zip:
-        city = get_city_from_zip(cli_args.location)
+        city = get_city_from_zip(cli_args.zip)
     else:
-        city = cli_args.location
+        city = cli_args.city
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units={unit}&appid={OPEN_WEATHER_KEY}"
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city},{state},{country}&units={unit}&appid={OPEN_WEATHER_KEY}"
     api_response = requests.get(url)
 
     return api_response.json()
@@ -159,7 +171,7 @@ def main():
     args = parse_cli()
     api_call = call_open_weather_api_city(args)
     weather_data = extract_weather_data(api_call)
-    output_weather_stdout(weather_data, args.location)
+    output_weather_stdout(weather_data, args.city)
 
 
 if __name__ == "__main__":
