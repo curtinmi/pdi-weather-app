@@ -39,7 +39,8 @@ def parse_cli():
     )
 
     # if country is not US, then state should be null
-    if parser.parse_args().state and parser.parse_args().cc != "US":
+    args = parser.parse_args()
+    if args.state and args.cc != "US":
         print(
             "A state code cannot exist for cities outside of the "
             "United States. The state code has been dropped."
