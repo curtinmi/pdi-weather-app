@@ -159,7 +159,7 @@ def rich_output(data: WeatherData, city: str) -> None:
     table = Table(
         Column(header="Attribute", style="bold bright_red"),
         Column(header="Value", style="bold turquoise2"),
-        title=f"\n\n{city}'s Weather:",
+        title=f"\n\n{city.title()}'s Weather:",
         title_style="bold",
     )
 
