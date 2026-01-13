@@ -5,6 +5,8 @@ from typing import NamedTuple
 
 import requests
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.table import Column, Table
 
 load_dotenv()
 OPEN_WEATHER_KEY = os.environ["API_KEY"]
@@ -150,28 +152,41 @@ def convert_wind_direction(degree: int) -> str:
         return "N"
 
 
-def output_weather_stdout(data: WeatherData, city: str) -> None:
+def rich_output(data: WeatherData, city: str) -> None:
     """
-    The weather data for the desired location is printed to the terminal.
+    Weather data is printed to the terminal in a rich format.
     """
-    print(f"\n\n{city}'s weather is: ")
-    print(f"description: {data.description}")
-    print(f"high temperature: {data.high_temp}")
-    print(f"low temperature: {data.low_temp}")
-    print(f"current_temp: {data.current_temp}")
-    print(f"feels_like: {data.feels_like}")
-    print(f"humidity: {data.humidity}")
-    print(f"visibility: {data.visibility}")
-    print(f"wind: {data.wind} {convert_wind_direction(data.wind_direction)}")
-    print(f"sunrise: {unix_time_to_local(data.sunrise)}")
-    print(f"sunset: {unix_time_to_local(data.sunset)}")
+    table = Table(
+        Column(header="Attribute", style="bold bright_red"),
+        Column(header="Value", style="bold turquoise2"),
+        title=f"\n\n{city.title()}'s Weather:",
+        title_style="bold",
+    )
+
+    table.add_row("Description", data.description.title())
+    table.add_row("High Temp", str(data.high_temp))
+    table.add_row("Low Temp", str(data.low_temp))
+    table.add_row("Current Temp", str(data.current_temp))
+    table.add_row("Feels Like", str(data.feels_like))
+    table.add_row("Humidity", str(data.humidity))
+    table.add_row("Visibility", str(data.visibility))
+    table.add_row("Wind", f"{data.wind} {convert_wind_direction(data.wind_direction)}")
+    table.add_row("Sunrise", str(unix_time_to_local(data.sunrise)))
+    table.add_row("Sunset", str(unix_time_to_local(data.sunset)))
+
+    console = Console()
+    console.print(table)
 
 
 def main():
     args = parse_cli()
     api_call = call_open_weather_api_city(args)
     weather_data = extract_weather_data(api_call)
-    output_weather_stdout(weather_data, args.city)
+
+    if args.city:
+        rich_output(weather_data, args.city)
+    else:
+        rich_output(weather_data, get_city_from_zip(args.zip))
 
 
 if __name__ == "__main__":
